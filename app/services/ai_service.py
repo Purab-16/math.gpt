@@ -98,7 +98,6 @@ async def solve_text(
         response_schema=GeminiMathSolution,
         system_instruction=system_prompt,
         temperature=0.1,
-        thinking_config=types.ThinkingConfig(thinking_budget=0),
     )
 
     max_attempts = 2
