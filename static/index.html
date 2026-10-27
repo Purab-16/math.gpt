@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Solver</title>
+    <!-- KaTeX CDN for math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+    <!-- Custom Stylesheet -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Math Solver</h1>
+            <p class="subtitle">Enter a math problem as text to get a step-by-step solution rendered with KaTeX.</p>
+        </header>
+
+        <!-- Input Form Card -->
+        <div class="card form-card">
+            <form id="solveForm">
+                <div class="form-group">
+                    <label for="problemText">Math Question (Text):</label>
+                    <textarea 
+                        id="problemText" 
+                        name="question" 
+                        rows="3" 
+                        placeholder="e.g., Solve 2x + 5 = 15 or \int x^2 dx"></textarea>
+                </div>
+
+                <div class="options-row">
+                    <div class="form-group half-width">
+                        <label for="difficultySelect">Detail Level:</label>
+                        <select id="difficultySelect" name="difficulty" class="select-input">
+                            <option value="simple" selected>Simple (Direct & concise)</option>
+                            <option value="detailed">Detailed (Deep explanation)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label for="languageSelect">Explanation Language:</label>
+                        <select id="languageSelect" name="language" class="select-input">
+                            <option value="english" selected>English</option>
+                            <option value="hinglish">Hinglish</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" id="solveBtn" class="btn primary-btn">Solve Problem</button>
+            </form>
+
+            <div id="statusMessage" class="status-message"></div>
+        </div>
+
+        <!-- Solution & Videos Section -->
+        <section id="resultsSection" class="results-section hidden">
+            <div class="card">
+                <div class="results-header">
+                    <h2>Solution</h2>
+                    <span id="topicBadge" class="badge"></span>
+                </div>
+
+                <div class="problem-display">
+                    <h3>Problem:</h3>
+                    <p id="displayProblem"></p>
+                </div>
+
+                <div class="steps-section">
+                    <h3>Step-by-Step Explanation:</h3>
+                    <ol id="stepsList" class="steps-list"></ol>
+                </div>
+
+                <div class="answer-box">
+                    <h3>Final Answer:</h3>
+                    <p id="finalAnswer" class="answer-text"></p>
+                </div>
+            </div>
+
+            <!-- Recommended Videos Area -->
+            <div class="card videos-card">
+                <h2>Recommended YouTube Videos</h2>
+                <div id="videosContainer" class="videos-grid"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Frontend Script -->
+    <script src="/static/script.js"></script>
+</body>
+</html>
