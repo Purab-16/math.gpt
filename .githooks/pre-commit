@@ -1,0 +1,34 @@
+#!/bin/sh
+# Git pre-commit hook to block secret keys and .env files
+
+# 1. Block staging of .env file (allow .env.example)
+STAGED_ENV=$(git diff --cached --name-only | grep -E "^\.env$|^\.env\.(?!example)" || true)
+
+if [ -n "$STAGED_ENV" ]; then
+    echo ""
+    echo "=========================================================="
+    echo " [BLOCK] Commit rejected by pre-commit hook!"
+    echo " Error: Cannot commit environment file ($STAGED_ENV)."
+    echo " Solution: Run 'git reset HEAD .env' and keep secrets in .env only."
+    echo "=========================================================="
+    echo ""
+    exit 1
+fi
+
+# 2. Block fake / real API keys in staged files
+# Detects patterns like GEMINI_API_KEY=..., YOUTUBE_API_KEY=..., AIza..., sk-..., AKIA...
+MATCHED_KEYS=$(git diff --cached -U0 | grep -E '^\+' | grep -E -i '(AIza[0-9A-Za-z_-]{35}|sk-[a-zA-Z0-9]{20,}|AKIA[0-9A-Z]{16}|GEMINI_API_KEY\s*=\s*["'"'"']?[A-Za-z0-9_-]{10,}|YOUTUBE_API_KEY\s*=\s*["'"'"']?[A-Za-z0-9_-]{10,})' | grep -v -i 'your_.*_here'|| true)
+
+if [ -n "$MATCHED_KEYS" ]; then
+    echo ""
+    echo "=========================================================="
+    echo " [BLOCK] Commit rejected by pre-commit hook!"
+    echo " Error: Detected potential API key or secret in staged files:"
+    echo "$MATCHED_KEYS"
+    echo " Solution: Remove hardcoded keys and load them from environment variables."
+    echo "=========================================================="
+    echo ""
+    exit 1
+fi
+
+exit 0

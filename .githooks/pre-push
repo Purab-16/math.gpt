@@ -1,0 +1,27 @@
+#!/bin/sh
+# Git pre-push hook: Confirmation prompt before pushing upstream
+
+echo ""
+echo "=========================================================="
+echo " [CONFIRMATION] You are about to push commits to remote."
+echo "=========================================================="
+
+# Check if interactive terminal with accessible tty exists
+if [ -t 0 ] && [ -r /dev/tty ] 2>/dev/null; then
+    printf "Are you sure you want to proceed with git push? [y/N]: "
+    read -r CONFIRM </dev/tty
+else
+    printf "Are you sure you want to proceed with git push? [y/N]: "
+    read -r CONFIRM
+fi
+
+case "$CONFIRM" in
+    [yY]|[yY][eE][sS])
+        echo "Push confirmed. Proceeding..."
+        exit 0
+        ;;
+    *)
+        echo "Push cancelled by user."
+        exit 1
+        ;;
+esac
