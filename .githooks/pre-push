@@ -1,18 +1,37 @@
 #!/bin/sh
 # Git pre-push hook: Confirmation prompt before pushing upstream
+#
+# Git sends the list of refs being pushed on stdin, so the answer must be read
+# from the keyboard (/dev/tty), not from stdin. Reading stdin would read a line
+# like "refs/heads/main 3f2a..." and always cancel the push.
+#
+# If no keyboard is available (some editor terminals), confirm one push with
+# the CONFIRM_PUSH environment variable instead.
 
 echo ""
 echo "=========================================================="
 echo " [CONFIRMATION] You are about to push commits to remote."
 echo "=========================================================="
 
-# Check if interactive terminal with accessible tty exists
-if [ -t 0 ] && [ -r /dev/tty ] 2>/dev/null; then
+# Confirmation without a keyboard, e.g. in PowerShell:
+#   $env:CONFIRM_PUSH="yes"; git push; Remove-Item Env:CONFIRM_PUSH
+case "$CONFIRM_PUSH" in
+    [yY]|[yY][eE][sS])
+        echo "Push confirmed with CONFIRM_PUSH. Proceeding..."
+        exit 0
+        ;;
+esac
+
+# Ask on the keyboard if one is available
+if (exec </dev/tty) 2>/dev/null; then
     printf "Are you sure you want to proceed with git push? [y/N]: "
     read -r CONFIRM </dev/tty
 else
-    printf "Are you sure you want to proceed with git push? [y/N]: "
-    read -r CONFIRM
+    echo "No keyboard input is available here, so the push cannot be confirmed."
+    echo "To confirm one push in PowerShell, run:"
+    echo "  \$env:CONFIRM_PUSH=\"yes\"; git push; Remove-Item Env:CONFIRM_PUSH"
+    echo "Push cancelled."
+    exit 1
 fi
 
 case "$CONFIRM" in
