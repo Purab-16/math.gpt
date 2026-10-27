@@ -1,6 +1,6 @@
 """Pydantic schemas for data validation and API response formatting."""
 
-from typing import List, Optional
+from typing import List, Literal, Optional
 from pydantic import BaseModel, Field
 
 
@@ -8,8 +8,12 @@ class SolveRequest(BaseModel):
     """Schema representing the math solving request input."""
 
     question: str = Field(..., description="The math problem text to solve")
-    difficulty: str = Field(default="simple", description="Explanation detail level: 'simple' or 'detailed'")
-    language: str = Field(default="english", description="Explanation language: 'english' or 'hinglish'")
+    difficulty: Literal["simple", "detailed"] = Field(
+        default="simple", description="Explanation detail level: 'simple' or 'detailed'"
+    )
+    language: Literal["english", "hinglish"] = Field(
+        default="english", description="Explanation language: 'english' or 'hinglish'"
+    )
 
 
 class ErrorResponse(BaseModel):

@@ -4,10 +4,17 @@ from unittest.mock import AsyncMock, patch
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.schemas import GeminiMathSolution
+from app.schemas import GeminiMathSolution, VideoItem
 from app.exceptions import InvalidInputError, AIServiceError
 
 client = TestClient(app)
+
+# Sample video returned by the mocked YouTube service
+MOCK_VIDEO = VideoItem(
+    title="Linear Equations Explained",
+    url="https://www.youtube.com/watch?v=abc123",
+    thumbnail="https://i.ytimg.com/vi/abc123/mqdefault.jpg",
+)
 
 
 def test_valid_input():
@@ -23,7 +30,9 @@ def test_valid_input():
         search_query="how to solve linear equations",
     )
 
-    with patch("app.routes.solve.solve_text", new=AsyncMock(return_value=mock_solution)):
+    with patch("app.routes.solve.solve_text", new=AsyncMock(return_value=mock_solution)), patch(
+        "app.routes.solve.search_math_videos", new=AsyncMock(return_value=[MOCK_VIDEO])
+    ) as mock_videos:
         response = client.post(
             "/solve",
             json={
@@ -38,6 +47,28 @@ def test_valid_input():
         assert data["final_answer"] == "x = 3"
         assert data["topic"] == "Linear Equations"
         assert len(data["steps"]) == 2
+        assert data["videos"][0]["url"] == MOCK_VIDEO.url
+        mock_videos.assert_called_once_with("how to solve linear equations", language="english")
+
+
+def test_solve_without_videos():
+    """Verify that the solution is still returned when no videos are found."""
+    mock_solution = GeminiMathSolution(
+        problem="Solve x + 1 = 2",
+        steps=["Step 1: Subtract 1: $x = 1$"],
+        final_answer="x = 1",
+        topic="Linear Equations",
+        search_query="linear equations",
+    )
+
+    with patch("app.routes.solve.solve_text", new=AsyncMock(return_value=mock_solution)), patch(
+        "app.routes.solve.search_math_videos", new=AsyncMock(return_value=[])
+    ):
+        response = client.post("/solve", json={"question": "Solve x + 1 = 2"})
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["final_answer"] == "x = 1"
         assert data["videos"] == []
 
 
@@ -130,6 +161,22 @@ def test_ai_failure():
         assert "Internal model failure" in data["message"] or "Unable to solve" in data["message"]
 
 
+def test_invalid_options():
+    """Verify that unknown difficulty or language values return a 422 ErrorResponse."""
+    response = client.post(
+        "/solve",
+        json={
+            "question": "Solve 2x = 4",
+            "difficulty": "expert",
+            "language": "french",
+        },
+    )
+
+    assert response.status_code == 422
+    data = response.json()
+    assert data["error_code"] == "INVALID_REQUEST"
+
+
 def test_hinglish_detailed_input():
     """Verify that difficulty='detailed' and language='hinglish' parameters are accepted."""
     mock_solution = GeminiMathSolution(
@@ -140,7 +187,9 @@ def test_hinglish_detailed_input():
         search_query="basic algebra in hindi",
     )
 
-    with patch("app.routes.solve.solve_text", new=AsyncMock(return_value=mock_solution)) as mock_solve:
+    with patch("app.routes.solve.solve_text", new=AsyncMock(return_value=mock_solution)) as mock_solve, patch(
+        "app.routes.solve.search_math_videos", new=AsyncMock(return_value=[])
+    ) as mock_videos:
         response = client.post(
             "/solve",
             json={
@@ -157,3 +206,4 @@ def test_hinglish_detailed_input():
             difficulty="detailed",
             language="hinglish",
         )
+        mock_videos.assert_called_once_with("basic algebra in hindi", language="hinglish")

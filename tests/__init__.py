@@ -1,1 +1,1 @@
-"""Tests package for math-solver."""
+"""Tests package for math.gpt."""

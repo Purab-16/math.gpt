@@ -14,3 +14,7 @@ load_dotenv(dotenv_path=ENV_FILE)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "")
+
+# App environment: 'development' (default) or 'production'
+APP_ENV = os.getenv("APP_ENV", "development").strip().lower()
+IS_PRODUCTION = APP_ENV == "production"

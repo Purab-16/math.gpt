@@ -1,1 +1,1 @@
-"""Math Solver application package."""
+"""math.gpt application package."""

@@ -2,92 +2,206 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math Solver</title>
-    <!-- KaTeX CDN for math rendering -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
-    <!-- Custom Stylesheet -->
-    <link rel="stylesheet" href="/static/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>math.gpt</title>
+    <meta name="description" content="math.gpt solves math problems step by step from text or a photo, with related YouTube videos.">
+    <!-- Inline favicon so the browser does not request /favicon.ico (404) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
+    <!-- Applies the saved light/dark theme before the page is drawn -->
+    <script src="/static/theme.js?v=7"></script>
+    <!-- Self-hosted UI font -->
+    <link rel="preload" href="/static/fonts/atkinson-hyperlegible-next-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <!-- KaTeX CDN for math rendering. The integrity hash blocks the file if the CDN copy is changed. -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+        integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
+        integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+        integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"></script>
+    <!-- Custom Stylesheet. Change ?v= when CSS changes so browsers load the new file. -->
+    <link rel="stylesheet" href="/static/style.css?v=8">
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <header class="header">
-            <h1>Math Solver</h1>
-            <p class="subtitle">Enter a math problem as text to get a step-by-step solution rendered with KaTeX.</p>
-        </header>
-
-        <!-- Input Form Card -->
-        <div class="card form-card">
-            <form id="solveForm">
-                <div class="form-group">
-                    <label for="problemText">Math Question (Text):</label>
-                    <textarea 
-                        id="problemText" 
-                        name="question" 
-                        rows="3" 
-                        placeholder="e.g., Solve 2x + 5 = 15 or \int x^2 dx"></textarea>
+    <div class="app">
+        <!-- Left column: the question composer (Day 6 history will also go here) -->
+        <section class="composer" aria-label="Ask a question">
+            <div class="brand-row">
+                <div>
+                    <h1 class="wordmark">math.gpt</h1>
+                    <p class="tagline">Type a question, upload a photo, or paste a screenshot.</p>
                 </div>
-
-                <div class="options-row">
-                    <div class="form-group half-width">
-                        <label for="difficultySelect">Detail Level:</label>
-                        <select id="difficultySelect" name="difficulty" class="select-input">
-                            <option value="simple" selected>Simple (Direct & concise)</option>
-                            <option value="detailed">Detailed (Deep explanation)</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group half-width">
-                        <label for="languageSelect">Explanation Language:</label>
-                        <select id="languageSelect" name="language" class="select-input">
-                            <option value="english" selected>English</option>
-                            <option value="hinglish">Hinglish</option>
-                        </select>
-                    </div>
-                </div>
-
-                <button type="submit" id="solveBtn" class="btn primary-btn">Solve Problem</button>
-            </form>
-
-            <div id="statusMessage" class="status-message"></div>
-        </div>
-
-        <!-- Solution & Videos Section -->
-        <section id="resultsSection" class="results-section hidden">
-            <div class="card">
-                <div class="results-header">
-                    <h2>Solution</h2>
-                    <span id="topicBadge" class="badge"></span>
-                </div>
-
-                <div class="problem-display">
-                    <h3>Problem:</h3>
-                    <p id="displayProblem"></p>
-                </div>
-
-                <div class="steps-section">
-                    <h3>Step-by-Step Explanation:</h3>
-                    <ol id="stepsList" class="steps-list"></ol>
-                </div>
-
-                <div class="answer-box">
-                    <h3>Final Answer:</h3>
-                    <p id="finalAnswer" class="answer-text"></p>
-                </div>
+                <button type="button" id="themeToggle" class="icon-btn" aria-label="Switch between light and dark mode" title="Switch theme">
+                    <!-- Moon icon (shown in light mode) -->
+                    <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                        <path fill="currentColor" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>
+                    </svg>
+                    <!-- Sun icon (shown in dark mode) -->
+                    <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4.5" fill="currentColor"/>
+                        <path stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+                    </svg>
+                </button>
             </div>
 
-            <!-- Recommended Videos Area -->
-            <div class="card videos-card">
-                <h2>Recommended YouTube Videos</h2>
-                <div id="videosContainer" class="videos-grid"></div>
+            <form id="solveForm" novalidate>
+                <div class="field">
+                    <label for="problemText" class="field-label">Question</label>
+                    <div class="editor">
+                        <!-- Symbol bar: each button inserts LaTeX at the cursor. "|" marks where the cursor goes. -->
+                        <div id="symbolBar" class="symbol-bar" role="toolbar" aria-label="Insert math symbols">
+                            <button type="button" class="symbol-btn" data-insert="\int " aria-label="Insert integral">∫</button>
+                            <button type="button" class="symbol-btn" data-insert="\int_{|}^{} " aria-label="Insert definite integral">∫ₐᵇ</button>
+                            <button type="button" class="symbol-btn" data-insert="\frac{|}{}" aria-label="Insert fraction">a⁄b</button>
+                            <button type="button" class="symbol-btn" data-insert="\sqrt{|}" aria-label="Insert square root">√</button>
+                            <button type="button" class="symbol-btn" data-insert="^{|}" aria-label="Insert power">xⁿ</button>
+                            <button type="button" class="symbol-btn" data-insert="\lim_{x \to |} " aria-label="Insert limit">lim</button>
+                            <button type="button" class="symbol-btn" data-insert="\pi " aria-label="Insert pi">π</button>
+                            <button type="button" class="symbol-btn" data-insert="\theta " aria-label="Insert theta">θ</button>
+                            <button type="button" class="symbol-btn" data-insert="\infty " aria-label="Insert infinity">∞</button>
+                            <button type="button" class="symbol-btn" data-insert="\le " aria-label="Insert less than or equal">≤</button>
+                            <button type="button" class="symbol-btn" data-insert="\ge " aria-label="Insert greater than or equal">≥</button>                        </div>
+                        <textarea
+                            id="problemText"
+                            name="question"
+                            rows="4"
+                            maxlength="2000"
+                            placeholder="e.g. Solve 2x + 5 = 15. With a photo, add a hint like &quot;Only solve Q3&quot;."></textarea>
+                        <!-- Live preview of typed math -->
+                        <div id="mathPreview" class="math-preview" hidden>
+                            <span class="math-preview-label">Preview</span>
+                            <div id="mathPreviewContent"></div>
+                        </div>
+                    </div>
+                    <div class="field-hint">
+                        <span><kbd>Ctrl</kbd> + <kbd>Enter</kbd> to solve</span>
+                        <span id="charCount">0 / 2000</span>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">Photo <span class="optional">(optional)</span></span>
+                    <input type="file" id="imageInput" name="image" accept="image/png,image/jpeg,image/webp" class="visually-hidden">
+                    <label id="dropzone" class="dropzone" for="imageInput">
+                        <span class="dropzone-title">Drop a photo here or <span class="link-text">browse</span></span>
+                        <span class="dropzone-hint">PNG, JPEG or WEBP, up to 10 MB. Paste works too.</span>
+                    </label>
+
+                    <div id="imagePreviewBox" class="image-preview" hidden>
+                        <img id="imagePreview" alt="Selected math problem photo">
+                        <button type="button" id="removeImageBtn" class="remove-image" aria-label="Remove photo" title="Remove photo">
+                            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                                <path stroke="currentColor" stroke-width="2.5" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="options">
+                    <fieldset class="segmented">
+                        <legend class="field-label">Detail</legend>
+                        <div class="segmented-group">
+                            <input type="radio" id="difficultySimple" name="difficulty" value="simple" checked>
+                            <label for="difficultySimple">Simple</label>
+                            <input type="radio" id="difficultyDetailed" name="difficulty" value="detailed">
+                            <label for="difficultyDetailed">Detailed</label>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="segmented">
+                        <legend class="field-label">Language</legend>
+                        <div class="segmented-group">
+                            <input type="radio" id="languageEnglish" name="language" value="english" checked>
+                            <label for="languageEnglish">English</label>
+                            <input type="radio" id="languageHinglish" name="language" value="hinglish">
+                            <label for="languageHinglish">Hinglish</label>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <div class="solve-bar">
+                    <button type="submit" id="solveBtn" class="btn-primary">
+                        <span id="solveSpinner" class="spinner" aria-hidden="true" hidden></span>
+                        <span id="solveBtnLabel">Solve</span>
+                    </button>
+                </div>
+            </form>
+
+            <div id="statusMessage" class="status" role="status" aria-live="polite" hidden></div>
+
+            <!-- History: saved in this browser only (localStorage). Opened by default on desktop. -->
+            <details id="historyPanel" class="history">
+                <summary class="history-summary">
+                    <span>History</span>
+                    <span id="historyCount" class="history-count">0</span>
+                </summary>
+                <p id="historyEmpty" class="history-empty">Questions you solve are saved here, on this device only.</p>
+                <ul id="historyList" class="history-list" aria-label="Solved questions"></ul>
+                <button type="button" id="clearHistoryBtn" class="text-btn history-clear" hidden>Clear history</button>
+            </details>
+
+            <p class="disclaimer">Solutions are AI generated. Check important answers.</p>
+        </section>
+
+        <!-- Right column: the solution sheet -->
+        <section class="sheet-wrap" aria-label="Solution">
+            <div id="sheet" class="sheet">
+                <!-- Empty state -->
+                <div id="emptyState" class="sheet-block">
+                    <span class="margin-mark" aria-hidden="true">Q.</span>
+                    <h2 class="sheet-title">Your worked solution appears here</h2>
+                    <p class="sheet-text">Ask a question, or start with one of these:</p>
+                    <ul class="examples">
+                        <li><button type="button" class="example" data-example="Solve 2x + 5 = 15">Solve $2x + 5 = 15$</button></li>
+                        <li><button type="button" class="example" data-example="Factor x^2 - 5x + 6">Factor $x^2 - 5x + 6$</button></li>
+                        <li><button type="button" class="example" data-example="\int_0^2 (x^3 + 2x - 4) \, dx">Evaluate $\int_0^2 (x^3 + 2x - 4)\,dx$</button></li>
+                        <li><button type="button" class="example" data-example="\lim_{x \to 0} \frac{\sin x}{x}">Find $\lim_{x \to 0} \frac{\sin x}{x}$</button></li>
+                    </ul>
+                </div>
+
+                <!-- Loading state -->
+                <div id="loadingState" class="sheet-block loading" hidden>
+                    <span class="margin-mark" aria-hidden="true">Q.</span>
+                    <p class="sheet-text">Solving your question. This usually takes a few seconds.</p>
+                    <div class="skeleton" style="width: 72%"></div>
+                    <div class="skeleton" style="width: 88%"></div>
+                    <div class="skeleton" style="width: 64%"></div>
+                    <div class="skeleton" style="width: 80%"></div>
+                </div>
+
+                <!-- Results -->
+                <div id="resultsSection" hidden>
+                    <div class="sheet-head">
+                        <h2 class="sheet-title">Solution</h2>
+                        <span id="topicBadge" class="topic"></span>
+                    </div>
+
+                    <div class="sheet-block">
+                        <span class="margin-mark" aria-hidden="true">Q.</span>
+                        <p id="displayProblem" class="problem-text"></p>
+                    </div>
+
+                    <ol id="stepsList" class="steps" aria-label="Steps"></ol>
+
+                    <div class="sheet-block answer">
+                        <span class="margin-mark therefore" aria-hidden="true">∴</span>
+                        <span class="answer-label">Final answer</span>
+                        <div id="finalAnswer" class="answer-box"></div>
+                        <div>
+                            <button type="button" id="copyAnswerBtn" class="text-btn">Copy answer</button>
+                        </div>
+                    </div>
+
+                    <div class="videos">
+                        <h3 class="videos-title">Videos on this topic</h3>
+                        <div id="videosContainer" class="video-list"></div>
+                    </div>
+                </div>
             </div>
         </section>
     </div>
 
-    <!-- Frontend Script -->
-    <script src="/static/script.js"></script>
+    <!-- Frontend Script. Change ?v= when JS changes so browsers load the new file. -->
+    <script src="/static/script.js?v=8"></script>
 </body>
 </html>

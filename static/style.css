@@ -1,234 +1,1008 @@
-/* Base Reset and Layout */
-* {
+/* math.gpt styles
+   Design idea: blue pen on graph paper. The solution sheet is the one bold
+   element (grid, red margin line, step numbers in the margin, boxed answer).
+   Everything else stays quiet. */
+
+/* Self-hosted UI font (SIL Open Font License, see fonts/OFL-LICENSE.txt) */
+@font-face {
+    font-family: "Atkinson Hyperlegible Next";
+    src: url("/static/fonts/atkinson-hyperlegible-next-latin-400-normal.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Atkinson Hyperlegible Next";
+    src: url("/static/fonts/atkinson-hyperlegible-next-latin-600-normal.woff2") format("woff2");
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "Atkinson Hyperlegible Next";
+    src: url("/static/fonts/atkinson-hyperlegible-next-latin-700-normal.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+/* ---------- Color and type tokens ---------- */
+
+/* Light theme: white graph paper, blue pen */
+:root {
+    color-scheme: light;
+    --paper: #FBFCFE;
+    --surface: #FFFFFF;
+    --ink: #1A2238;
+    --ink-soft: #4A5470;
+    --pen: #2747C9;
+    --pen-strong: #1D37A3;
+    --pen-tint: #E9EEFC;
+    --on-pen: #FFFFFF;
+    --grid: #EDF1F8;
+    --line: #D5DCEA;
+    --margin: #D64545;
+    --error: #B42318;
+    --error-tint: #FDECEA;
+
+    --font-ui: "Atkinson Hyperlegible Next", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-math: KaTeX_Main, "Times New Roman", serif;
+
+    /* Sheet geometry: left padding and where the red margin line sits */
+    --gutter: 76px;
+    --margin-x: 56px;
+}
+
+/* Dark theme: blueprint paper */
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper: #0E1A33;
+    --surface: #12224A;
+    --ink: #E6ECFA;
+    --ink-soft: #A9B6D6;
+    --pen: #8FB0FF;
+    --pen-strong: #B5CBFF;
+    --pen-tint: #1B2F5E;
+    --on-pen: #0E1A33;
+    --grid: #182C58;
+    --line: #2A407A;
+    --margin: #FF7A7A;
+    --error: #FFB4A9;
+    --error-tint: #3A1F2A;
+}
+
+/* Follow the system setting unless the user picked light mode */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --paper: #0E1A33;
+        --surface: #12224A;
+        --ink: #E6ECFA;
+        --ink-soft: #A9B6D6;
+        --pen: #8FB0FF;
+        --pen-strong: #B5CBFF;
+        --pen-tint: #1B2F5E;
+        --on-pen: #0E1A33;
+        --grid: #182C58;
+        --line: #2A407A;
+        --margin: #FF7A7A;
+        --error: #FFB4A9;
+        --error-tint: #3A1F2A;
+    }
+}
+
+/* ---------- Base ---------- */
+
+*,
+*::before,
+*::after {
     box-sizing: border-box;
-    margin: 0;
-    padding: 0;
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    line-height: 1.6;
-    color: #1f2937;
-    background-color: #f3f4f6;
-    padding: 2rem 1rem;
-}
-
-.container {
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-/* Header */
-.header {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-.header h1 {
-    font-size: 2.25rem;
-    color: #111827;
-    margin-bottom: 0.5rem;
-}
-
-.subtitle {
+    margin: 0;
+    font-family: var(--font-ui);
     font-size: 1rem;
-    color: #4b5563;
+    line-height: 1.6;
+    color: var(--ink);
+    background-color: var(--paper);
+    -webkit-font-smoothing: antialiased;
 }
 
-/* Cards */
-.card {
-    background-color: #ffffff;
-    border-radius: 12px;
-    padding: 1.75rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-    margin-bottom: 1.75rem;
+[hidden] {
+    display: none !important;
 }
 
-/* Form Styles */
-.form-group {
+button,
+input,
+textarea {
+    font: inherit;
+    color: inherit;
+}
+
+h1,
+h2,
+h3,
+p {
+    margin: 0;
+}
+
+:focus-visible {
+    outline: 2px solid var(--pen);
+    outline-offset: 2px;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ---------- Page layout ---------- */
+
+.app {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+@media (min-width: 980px) {
+    .app {
+        grid-template-columns: 380px minmax(0, 1fr);
+        gap: 48px;
+        padding: 0 32px;
+    }
+
+    /* The composer stays in view while the solution scrolls */
+    .composer {
+        position: sticky;
+        top: 0;
+        max-height: 100vh;
+        overflow-y: auto;
+    }
+}
+
+/* ---------- Composer (left column) ---------- */
+
+.composer {
     display: flex;
     flex-direction: column;
-    margin-bottom: 1.25rem;
+    gap: 22px;
+    padding-block: 28px 24px;
 }
 
-.form-group label {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: #374151;
-}
-
-textarea {
-    width: 100%;
-    padding: 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    font-size: 1rem;
-    font-family: inherit;
-    resize: vertical;
-}
-
-textarea:focus, select:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-}
-
-.options-row {
+.brand-row {
     display: flex;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
 }
 
-.half-width {
-    flex: 1;
-    margin-bottom: 0;
+/* The wordmark is set in the KaTeX math font, like a typeset equation */
+.wordmark {
+    font-family: var(--font-math);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 2.15rem;
+    line-height: 1.1;
 }
 
-.select-input {
-    width: 100%;
-    padding: 0.65rem 0.75rem;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
+.tagline {
+    margin-top: 6px;
     font-size: 0.95rem;
-    background-color: #ffffff;
-    font-family: inherit;
+    color: var(--ink-soft);
 }
 
-.btn {
-    display: inline-block;
-    width: 100%;
-    padding: 0.85rem;
-    font-size: 1rem;
-    font-weight: 600;
-    border: none;
-    border-radius: 8px;
+.icon-btn {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background-color: var(--surface);
+    color: var(--ink);
     cursor: pointer;
-    transition: background-color 0.2s ease, opacity 0.2s ease;
 }
 
-.primary-btn {
-    background-color: #2563eb;
-    color: #ffffff;
+.icon-btn:hover {
+    border-color: var(--pen);
+    color: var(--pen);
 }
 
-.primary-btn:hover {
-    background-color: #1d4ed8;
-}
-
-.primary-btn:disabled {
-    background-color: #93c5fd;
-    cursor: not-allowed;
-}
-
-.status-message {
-    margin-top: 1rem;
-    font-size: 0.95rem;
-    text-align: center;
-    color: #4b5563;
-}
-
-/* Results Section */
-.results-section.hidden {
+/* Show the moon in light mode and the sun in dark mode */
+.icon-sun {
     display: none;
 }
 
-.results-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #e5e7eb;
-    padding-bottom: 0.75rem;
-    margin-bottom: 1.25rem;
-}
-
-.badge {
-    background-color: #dbeafe;
-    color: #1e40af;
-    padding: 0.35rem 0.75rem;
-    border-radius: 9999px;
-    font-size: 0.85rem;
-    font-weight: 600;
-}
-
-.problem-display, .steps-section, .answer-box {
-    margin-bottom: 1.5rem;
-}
-
-.problem-display h3, .steps-section h3, .answer-box h3 {
-    font-size: 1.05rem;
-    color: #374151;
-    margin-bottom: 0.5rem;
-}
-
-.steps-list {
-    padding-left: 1.5rem;
-}
-
-.steps-list li {
-    margin-bottom: 0.65rem;
-    line-height: 1.7;
-}
-
-.answer-box {
-    background-color: #f0fdf4;
-    border-left: 4px solid #16a34a;
-    padding: 1rem;
-    border-radius: 4px;
-}
-
-.answer-text {
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #15803d;
-}
-
-/* Video Grid */
-.videos-card h2 {
-    font-size: 1.35rem;
-    margin-bottom: 1rem;
-}
-
-.videos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 1.25rem;
-}
-
-.video-card {
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    overflow: hidden;
-    background-color: #fafafa;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.video-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.video-card img {
-    width: 100%;
-    height: 120px;
-    object-fit: cover;
+:root[data-theme="dark"] .icon-sun {
     display: block;
 }
 
-.video-info {
-    padding: 0.75rem;
+:root[data-theme="dark"] .icon-moon {
+    display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .icon-sun {
+        display: block;
+    }
+
+    :root:not([data-theme="light"]) .icon-moon {
+        display: none;
+    }
+}
+
+#solveForm {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.field-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.optional {
+    font-weight: 400;
+    color: var(--ink-soft);
+}
+
+/* Editor: symbol bar + textarea + live preview in one box */
+.editor {
+    overflow: hidden;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    background-color: var(--surface);
+}
+
+.editor:focus-within {
+    border-color: var(--pen);
+    box-shadow: 0 0 0 3px var(--pen-tint);
+}
+
+.symbol-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    padding: 6px;
+    border-bottom: 1px solid var(--line);
+    background-color: var(--paper);
+}
+
+.symbol-btn {
+    min-width: 30px;
+    height: 32px;
+    padding: 0 6px;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    font-family: var(--font-math);
+    font-size: 1.05rem;
+    cursor: pointer;
+}
+
+.symbol-btn:hover {
+    background-color: var(--pen-tint);
+    color: var(--pen-strong);
+}
+
+.editor textarea {
+    display: block;
+    width: 100%;
+    min-height: 112px;
+    padding: 12px 14px;
+    border: 0;
+    background: transparent;
+    line-height: 1.5;
+    resize: vertical;
+}
+
+/* The whole editor box shows the focus ring instead */
+.editor textarea:focus-visible {
+    outline: none;
+}
+
+.math-preview {
+    padding: 10px 14px 12px;
+    border-top: 1px dashed var(--line);
+    font-size: 1.05rem;
+    overflow-x: auto;
+}
+
+.math-preview-label {
+    display: block;
+    margin-bottom: 2px;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+}
+
+.field-hint {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+}
+
+#charCount.near-limit {
+    color: var(--error);
+}
+
+kbd {
+    padding: 0 5px;
+    border: 1px solid var(--line);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    background-color: var(--surface);
+    font-family: inherit;
+    font-size: 0.78rem;
+}
+
+/* Photo drop area */
+.dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 18px 16px;
+    border: 1.5px dashed var(--line);
+    border-radius: 8px;
+    color: var(--ink-soft);
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.dropzone:hover,
+.dropzone.is-dragover {
+    border-color: var(--pen);
+    background-color: var(--pen-tint);
+}
+
+/* Keyboard users focus the hidden input; show the ring on the drop area */
+#imageInput:focus-visible + .dropzone {
+    outline: 2px solid var(--pen);
+    outline-offset: 2px;
+}
+
+.dropzone-title {
+    font-weight: 600;
+    color: var(--ink);
+}
+
+.link-text {
+    color: var(--pen);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.dropzone-hint {
+    font-size: 0.82rem;
+}
+
+.image-preview {
+    position: relative;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background-color: var(--surface);
+}
+
+.image-preview img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 200px;
+    margin: 0 auto;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.remove-image {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background-color: var(--surface);
+    cursor: pointer;
+}
+
+.remove-image:hover {
+    border-color: var(--error);
+    color: var(--error);
+}
+
+/* Segmented controls for detail and language */
+.options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+@media (max-width: 400px) {
+    .options {
+        grid-template-columns: 1fr;
+    }
+}
+
+.segmented {
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.segmented legend {
+    margin-bottom: 8px;
+    padding: 0;
+}
+
+.segmented-group {
+    display: flex;
+    padding: 3px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background-color: var(--surface);
+}
+
+.segmented-group input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+.segmented-group label {
+    flex: 1;
+    padding: 7px 8px;
+    border-radius: 6px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    text-align: center;
+    color: var(--ink-soft);
+    cursor: pointer;
+}
+
+.segmented-group input:checked + label {
+    background-color: var(--pen);
+    color: var(--on-pen);
+}
+
+.segmented-group input:focus-visible + label {
+    outline: 2px solid var(--pen);
+    outline-offset: 1px;
+}
+
+/* Solve button. On phones it sticks to the bottom of the screen. */
+@media (max-width: 979px) {
+    .solve-bar {
+        position: sticky;
+        bottom: 0;
+        z-index: 5;
+        margin-inline: -20px;
+        padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px));
+        border-top: 1px solid var(--line);
+        background-color: var(--paper);
+    }
+}
+
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 13px 18px;
+    border: 0;
+    border-radius: 8px;
+    background-color: var(--pen);
+    color: var(--on-pen);
+    font-size: 1.02rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-primary:hover {
+    background-color: var(--pen-strong);
+}
+
+.btn-primary:disabled {
+    opacity: 0.75;
+    cursor: progress;
+}
+
+.spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+.status {
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.92rem;
+}
+
+.status.is-error {
+    background-color: var(--error-tint);
+    color: var(--error);
+}
+
+.status.is-info {
+    padding-inline: 0;
+    color: var(--ink-soft);
+}
+
+.disclaimer {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+}
+
+/* ---------- History (left column) ---------- */
+
+.history {
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+}
+
+.history-summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    list-style: none;
+}
+
+.history-summary::-webkit-details-marker {
+    display: none;
+}
+
+/* Small chevron that turns when the panel opens */
+.history-summary::after {
+    content: "";
+    width: 7px;
+    height: 7px;
+    margin-left: auto;
+    border-right: 2px solid var(--ink-soft);
+    border-bottom: 2px solid var(--ink-soft);
+    transform: rotate(-45deg);
+    transition: transform 0.15s ease;
+}
+
+.history[open] .history-summary::after {
+    transform: rotate(45deg);
+}
+
+.history-count {
+    min-width: 22px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background-color: var(--pen-tint);
+    font-size: 0.78rem;
+    text-align: center;
+    color: var(--pen-strong);
+}
+
+.history-empty {
+    margin-top: 10px;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 45vh;
+    margin: 10px 0 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+}
+
+.history-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 2px;
+    border-radius: 8px;
+}
+
+.history-open {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+}
+
+.history-open:hover,
+.history-item[aria-current="true"] .history-open {
+    background-color: var(--pen-tint);
+}
+
+.history-title {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.history-meta {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+}
+
+.history-delete {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    margin-top: 6px;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--ink-soft);
+    cursor: pointer;
+}
+
+.history-delete:hover {
+    background-color: var(--error-tint);
+    color: var(--error);
+}
+
+.history-clear {
+    margin-top: 10px;
+}
+
+/* ---------- Solution sheet (right column) ---------- */
+
+.sheet-wrap {
+    padding-block: 28px 40px;
+}
+
+.sheet {
+    position: relative;
+    min-height: calc(100vh - 68px);
+    padding: 32px 28px 40px var(--gutter);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background-color: var(--surface);
+    /* Faint graph paper grid */
+    background-image:
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+}
+
+/* Red margin line, like a notebook page */
+.sheet::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: var(--margin-x);
+    width: 2px;
+    background-color: var(--margin);
+    opacity: 0.55;
+}
+
+@media (max-width: 979px) {
+    .sheet {
+        min-height: 0;
+    }
+}
+
+@media (max-width: 600px) {
+    :root {
+        --gutter: 48px;
+        --margin-x: 36px;
+    }
+
+    .sheet {
+        padding-top: 24px;
+        padding-right: 16px;
+        padding-bottom: 32px;
+    }
+}
+
+.sheet-block {
+    position: relative;
+}
+
+/* Marks that sit in the margin: "Q.", step numbers, "∴" */
+.margin-mark {
+    position: absolute;
+    top: 0;
+    left: calc(-1 * var(--gutter));
+    width: calc(var(--margin-x) - 12px);
+    font-family: var(--font-math);
+    font-size: 1.1rem;
+    text-align: right;
+    color: var(--pen);
+}
+
+.sheet-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+.sheet-text {
+    margin-top: 6px;
+    color: var(--ink-soft);
+}
+
+/* Empty state examples */
+.examples {
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.example {
+    padding: 6px 0;
+    border: 0;
+    background: none;
+    font-size: 1.05rem;
+    text-align: left;
+    color: var(--pen);
+    cursor: pointer;
+}
+
+.example:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+
+/* Loading placeholder lines */
+.skeleton {
+    height: 14px;
+    margin-top: 18px;
+    border-radius: 4px;
+    background-color: var(--pen-tint);
+    animation: pulse 1.2s ease-in-out infinite;
+}
+
+/* Results */
+.sheet-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 12px;
+    margin-bottom: 20px;
+}
+
+.topic {
+    padding: 2px 10px;
+    border-radius: 999px;
+    background-color: var(--pen-tint);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--pen-strong);
+}
+
+.problem-text {
+    font-size: 1.1rem;
+    overflow-x: auto;
+}
+
+.steps {
+    margin: 24px 0 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+}
+
+.steps li {
+    position: relative;
+    max-width: 72ch;
+    padding-block: 10px;
+    line-height: 1.75;
+    counter-increment: step;
+    animation: step-in 0.35s ease both;
+    animation-delay: calc(var(--i, 0) * 70ms);
+}
+
+/* Step number in the margin */
+.steps li::before {
+    content: counter(step);
+    position: absolute;
+    top: 10px;
+    left: calc(-1 * var(--gutter));
+    width: calc(var(--margin-x) - 12px);
+    font-family: var(--font-math);
+    font-size: 1.1rem;
+    text-align: right;
+    color: var(--pen);
+}
+
+/* Long equations scroll inside the step, not the page */
+.step-text {
+    display: block;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.answer {
+    margin-top: 28px;
+}
+
+/* Lines up with the middle of the answer box */
+.therefore {
+    top: 46px;
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.answer-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+}
+
+/* Double border, like boxing the answer in an exam copy */
+.answer-box {
+    display: inline-block;
+    max-width: 100%;
+    padding: 12px 18px;
+    border: 4px double var(--pen);
+    background-color: var(--surface);
+    font-size: 1.2rem;
+    font-weight: 700;
+    overflow-x: auto;
+}
+
+.text-btn {
+    margin-top: 8px;
+    padding: 4px 0;
+    border: 0;
+    background: none;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--pen);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+/* Videos */
+.videos {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+}
+
+.videos-title {
+    margin-bottom: 12px;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.video-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+.video {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background-color: var(--surface);
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.video:hover {
+    border-color: var(--pen);
+}
+
+.video img {
+    flex-shrink: 0;
+    width: 112px;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 4px;
 }
 
 .video-title {
+    display: -webkit-box;
+    overflow: hidden;
     font-size: 0.9rem;
     font-weight: 600;
-    color: #1f2937;
-    text-decoration: none;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
+    line-height: 1.4;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
-    overflow: hidden;
 }
 
-.video-title:hover {
-    color: #2563eb;
+.no-videos {
+    font-size: 0.92rem;
+    color: var(--ink-soft);
+}
+
+/* ---------- KaTeX tweaks ---------- */
+
+.katex {
+    font-size: 1.08em;
+}
+
+.katex-display {
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-block: 4px;
+}
+
+/* ---------- Motion ---------- */
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes pulse {
+    50% {
+        opacity: 0.45;
+    }
+}
+
+/* Steps appear one by one when a solution arrives */
+@keyframes step-in {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+        transition: none !important;
+    }
 }
