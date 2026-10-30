@@ -175,3 +175,6 @@ Both solve endpoints are limited to 10 requests per minute per IP address.
 - Generic error messages. No stack traces, keys, or raw model output are returned.
 - API docs are turned off in production.
 
+**Live demo:** https://math-gpt-vm39.onrender.com/
+
+The site runs on Render's free tier. If nobody used it for a while, the first load can take up to a minute.
