@@ -19,35 +19,34 @@ math.gpt is a web application where users can input a math problem via text or b
 ```
 math-gpt/
   app/
-    main.py                 # FastAPI app, error handlers, security headers, size limit
-    config.py               # Environment configuration (.env loader)
-    schemas.py              # Pydantic data schemas for requests and responses
-    exceptions.py           # Custom exceptions (invalid input, AI errors, rate limits)
-    cache.py                # Shared in-memory cache with expiry
-    rate_limit.py           # Per-IP rate limiter for solve endpoints
-    image_utils.py          # Safe image reading and type detection
+    main.py               # app setup, error handlers, security headers
+    config.py             # reads the .env file
+    schemas.py            # request and response models
+    exceptions.py         # our own error types
+    cache.py              # small in-memory cache
+    rate_limit.py         # limits requests per IP
+    image_utils.py        # checks uploaded images
     routes/
-      solve.py              # POST /solve and POST /solve/image handlers
+      solve.py            # /solve and /solve/image
     services/
-      ai_service.py         # Gemini math solver (text and image) with cache
-      youtube_service.py    # YouTube Data API v3 video search with cache
+      ai_service.py       # talks to Gemini
+      youtube_service.py  # finds YouTube videos
   tests/
-    conftest.py             # Resets caches and rate limiter before each test
-    test_solve.py           # /solve endpoint tests (Gemini and YouTube are mocked)
-    test_image.py           # /solve/image endpoint tests
-    test_cache.py           # Cache and Gemini cache tests
-    test_security.py        # Security headers, rate limit, request size tests
-    test_youtube.py         # YouTube service tests (HTTP is mocked)
+    conftest.py           # clean state before each test
+    test_solve.py
+    test_image.py
+    test_cache.py
+    test_security.py
+    test_youtube.py
   static/
-    index.html              # Frontend user interface
-    style.css               # Styling, light and dark themes
-    script.js               # Form handling, photo upload, live preview, KaTeX rendering
-    theme.js                # Applies the saved light/dark theme before the page draws
-    fonts/                  # Self-hosted Atkinson Hyperlegible Next font (OFL license)
-  .env.example              # Template for required environment variables
-  .gitignore                # Git ignore rules for venv, cache, and secrets
-  requirements.txt          # Python project dependencies
-  README.md                 # Project documentation and setup guide
+    index.html            # the page
+    style.css             # light and dark themes
+    script.js             # form, photo upload, history
+    theme.js              # sets the saved theme early
+    fonts/                # Atkinson Hyperlegible Next
+  .env.example            # copy this to .env
+  requirements.txt
+  README.md
 ```
 
 ---
