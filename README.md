@@ -163,45 +163,6 @@ Both solve endpoints are limited to 10 requests per minute per IP address.
 
 ---
 
-## Deploying to Render (Free Tier)
-
-### Before you start
-- Push the project to GitHub. Check that `.env` is **not** in the repo (it is in `.gitignore`, and the pre-commit hook blocks it).
-- Keep your Gemini and YouTube keys ready. They go into the Render dashboard, never into code.
-
-### Steps
-1. Sign in at [render.com](https://render.com) and click **New > Web Service**.
-2. Connect your GitHub repo.
-3. Fill in the settings:
-
-   | Setting | Value |
-   |---|---|
-   | Root Directory | Leave empty if the repo root is `math-gpt/`. Otherwise enter `math-gpt` |
-   | Runtime | Python 3 |
-   | Build Command | `pip install -r requirements.txt` |
-   | Start Command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips="*"` |
-   | Instance Type | Free |
-   | Health Check Path | `/health` |
-
-4. Under **Environment**, add these variables:
-
-   | Key | Value |
-   |---|---|
-   | `GEMINI_API_KEY` | Your Gemini key |
-   | `YOUTUBE_API_KEY` | Your YouTube key |
-   | `GEMINI_MODEL` | `gemini-3.8-flash` |
-   | `APP_ENV` | `production` |
-   | `PYTHON_VERSION` | Your local version from `python --version` |
-
-5. Click **Create Web Service**. After the build, open the `.onrender.com` URL.
-
-### Notes
-- `--proxy-headers` is required. Without it, every user looks like the same IP and the rate limiter blocks everyone together.
-- The free tier sleeps after about 15 minutes with no traffic. The first request after that takes 30 to 60 seconds.
-- Caches and rate limit counters live in memory, so they reset when the server sleeps or restarts.
-
----
-
 ## Security Checklist
 
 ### Built into the app
@@ -215,7 +176,3 @@ Both solve endpoints are limited to 10 requests per minute per IP address.
 - Generic error messages. No stack traces, keys, or raw model output are returned.
 - API docs are turned off in production.
 
-### Do this yourself in Google Cloud Console
-1. **YouTube key:** Go to **APIs & Services > Credentials**, open the key, and under **API restrictions** select only **YouTube Data API v3**.
-2. **Gemini key:** In Google AI Studio or Cloud Console, set a usage or budget limit so a bug or abuse cannot run up costs.
-3. Never share keys in chat, screenshots, or commits. If a key leaks, delete it and create a new one.
